@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}Delete Project{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card p-5 text-center shadow-lg border-danger rounded-4" style="background-color: #fcebeb;">
+            <div class="mb-4">
+                <i class="fas fa-exclamation-triangle text-danger" style="font-size: 3.5rem;"></i>
+            </div>
+            <h2 class="mb-3 text-dark fw-bold">Confirm Deletion</h2>
+            <p class="fs-5 text-muted">Are you absolutely sure you want to delete the project titled:</p>
+            <p class="fs-4 fw-bold text-dark mb-4">"{{ project.title }}"?</p>
+            <p class="mb-4 text-danger small">This action cannot be undone.</p>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="d-flex justify-content-center">
+                    <button type="submit" class="btn btn-danger py-2 px-4 me-3 fw-bold">Yes, Delete</button>
+                    <a href="{% url 'project_list' %}" class="btn btn-outline-secondary py-2 px-4">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
