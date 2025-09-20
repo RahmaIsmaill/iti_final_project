@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from .forms import RegisterForm, LoginForm, ProjectForm
@@ -17,8 +17,7 @@ def register_view(request):
             user.save()
             messages.success(request, "Registration successful! You can now log in.")
             return redirect("login")
-        else:
-            messages.error(request, "Please correct the errors below.")
+        messages.error(request, "Please correct the errors below.")
     else:
         form = RegisterForm()
     return render(request, "register.html", {"form": form})
@@ -30,20 +29,18 @@ def login_view(request):
         if form.is_valid():
             email = form.cleaned_data["email"]
             password = form.cleaned_data["password"]
-
             try:
                 user = User.objects.get(email=email)
             except User.DoesNotExist:
                 messages.error(request, "Invalid email or password.")
                 return redirect("login")
 
-            user = authenticate(request, username=user.username, password=password)
-            if user is not None:
+            user = authenticate(request, username=user.email, password=password)
+            if user:
                 login(request, user)
                 messages.success(request, f"Welcome back {user.first_name}!")
                 return redirect("project_list")
-            else:
-                messages.error(request, "Invalid email or password.")
+            messages.error(request, "Invalid email or password.")
     else:
         form = LoginForm()
     return render(request, "login.html", {"form": form})
@@ -51,7 +48,7 @@ def login_view(request):
 
 def logout_view(request):
     logout(request)
-    messages.success(request, "You have been logged out.")
+    messages.success(request, "Logged out successfully.")
     return redirect("login")
 
 
@@ -59,10 +56,7 @@ def logout_view(request):
 
 @login_required
 def project_list(request):
-    projects = Project.objects.all()
-
-
-    # بحث حسب التاريخ (اختياري)
+    projects = Project.objects.filter(owner=request.user)
     search_date = request.GET.get("date")
     if search_date:
         try:
@@ -70,7 +64,6 @@ def project_list(request):
             projects = projects.filter(start_date__lte=date_obj, end_date__gte=date_obj)
         except ValueError:
             messages.error(request, "Invalid date format. Use YYYY-MM-DD.")
-
     return render(request, "project_list.html", {"projects": projects})
 
 
@@ -84,8 +77,7 @@ def project_create(request):
             project.save()
             messages.success(request, "Project created successfully!")
             return redirect("project_list")
-        else:
-            messages.error(request, "Please correct the errors below.")
+        messages.error(request, "Please correct the errors below.")
     else:
         form = ProjectForm()
     return render(request, "project_form.html", {"form": form, "title": "Create Project"})
@@ -93,29 +85,36 @@ def project_create(request):
 
 @login_required
 def project_edit(request, pk):
-    project = get_object_or_404(Project, pk=pk, owner=request.user)
+    project = Project.objects.filter(pk=pk, owner=request.user).first()
+    if not project:
+        messages.error(request, "Project not found or you don't have permission.")
+        return redirect("project_list")
+
     if request.method == "POST":
         form = ProjectForm(request.POST, instance=project)
         if form.is_valid():
-            edited_project = form.save(commit=False)
-            edited_project.save()
+            form.save()
             messages.success(request, "Project updated successfully!")
             return redirect("project_list")
-        else:
-            messages.error(request, "Please correct the errors below.")
+        messages.error(request, "Please correct the errors below.")
     else:
         form = ProjectForm(instance=project)
+
     return render(request, "project_form.html", {"form": form, "title": "Edit Project"})
 
 
 @login_required
 def project_delete(request, pk):
-    project = get_object_or_404(Project, pk=pk, owner=request.user)
+    project = Project.objects.filter(pk=pk, owner=request.user).first()
+    if not project:
+        messages.error(request, "Project not found or you don't have permission.")
+        return redirect("project_list")
+
     if request.method == "POST":
         project.delete()
         messages.success(request, "Project deleted successfully!")
-        return redirect("project_list")
-    return render(request, "project_confirm_delete.html", {"project": project})
+    return redirect("project_list")
+
 
 @login_required
 def project_profile_view(request):

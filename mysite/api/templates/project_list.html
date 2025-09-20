@@ -15,10 +15,12 @@
   {% for project in projects %}
   <div class="project-card">
     <h3>{{ project.title }}</h3>
-    <p><strong>Description:</strong> {{ project.description|truncatechars:100 }}</p>
+  <p><strong>Owner:</strong> {{ project.owner.first_name }} {{ project.owner.last_name }}</p>
+<p><strong>Description:</strong> {{ project.details|truncatechars:100 }}</p>
+<p><strong>Total target:</strong> {{ project.total_target }}</p>
     <p><strong>Start:</strong> {{ project.start_date }}</p>
     <p><strong>End:</strong> {{ project.end_date }}</p>
-    <p><strong>Owner:</strong> {{ project.owner.first_name }}</p>
+    
     <div class="card-buttons">
       <a class="edit-btn" href="{% url 'project_edit' project.pk %}">Edit</a>
       <form action="{% url 'project_delete' project.pk %}" method="post" style="display:inline;">

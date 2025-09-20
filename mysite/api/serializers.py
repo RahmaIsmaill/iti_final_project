@@ -38,7 +38,7 @@ class RegisterSerializer(serializers.Serializer):
         last_name = validated_data['last_name']
         phone = validated_data['phone']
 
-        # توليد username صالح وفريد
+        
         base_username = email.split('@')[0] or 'user'
         username = base_username
         counter = 0
